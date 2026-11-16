@@ -16,6 +16,7 @@ Client-side-only React 18 + Vite 8 app: URL/texto → QR PNG descargable. No bac
 - **Invariante de seguridad** en `analyzeInput()` (`src/App.jsx`): rechaza `javascript:`, `data:`, `vbscript:` y `file:` (incluso ofuscados con espacios), antepone `https://` a dominios y `http://` a `host:puerto`. Es el único punto de normalización/validación; no simplificarlo.
 - **Tooltips son solo CSS** mediante atributos `data-tooltip` en `src/index.css`, sin librería. `.generator` no debe llevar `overflow: hidden` o recorta los tooltips; su barra superior tiene `border-radius` propio por eso.
 - Los pseudo-elementos de `.result__frame` son las esquinas decorativas: no le añadas `data-tooltip` (el tooltip está en `.result__tag`).
+- `base: './'` en `vite.config.js` es deliberado para GitHub Pages (subpath del repo); no lo cambies a `/` ni le pongas el nombre del repo. Vite reescribe solo el favicon `/img/log.png` a `./img/log.png` en el build. Despliegue automático en `.github/workflows/deploy.yml` (rama `main`, Node 22); en Settings → Pages la Source debe ser **GitHub Actions**.
 
 ## Constraints del usuario (preservar)
 UI en español, colores planos (**sin degradados**), **sin emojis** (iconos SVG), responsiva hasta ~320 px y bloque «Qué hace esta herramienta».

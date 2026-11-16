@@ -56,6 +56,17 @@ npm run preview
 └── package.json
 ```
 
+## Despliegue en GitHub Pages
+
+La configuración usa `base: './'` en `vite.config.js`, por lo que funciona en cualquier nombre de repositorio sin cambios previos.
+
+1. Crea el repositorio en GitHub y sube el proyecto (rama `main`).
+2. En el repo ve a **Settings → Pages → Build and deployment** y en **Source** selecciona **GitHub Actions**.
+3. Haz un push a `main`. El workflow `.github/workflows/deploy.yml` instala dependencias, ejecuta `npm run build` y publica el contenido de `dist/`.
+4. El progreso se ve en la pestaña **Actions**. La URL final aparece en **Settings → Pages**.
+
+> El workflow usa Node 22 (Vite 8 requiere `^20.19.0 || >=22.12.0`). Si tu rama no es `main`, cambia `branches: [main]` en el workflow.
+
 ## Notas de seguridad
 
 - `analyzeInput()` en `src/App.jsx` es el único punto de validación: rechaza protocolos peligrosos incluso si se intentan ofuscar con espacios, y antepone el protocolo adecuado a dominios y a direcciones `host:puerto`.
