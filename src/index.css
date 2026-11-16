@@ -139,6 +139,14 @@ body {
   color: #9aa8bf;
 }
 
+.note .note__disclaimer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(184, 242, 74, 0.18);
+  font-size: 0.76rem;
+  color: #7d8ca3;
+}
+
 .features {
   list-style: none;
   margin: 0 0 30px;
@@ -310,6 +318,46 @@ select:focus {
   background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: 11px;
+}
+
+.warnings {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border: 1px solid #fcd34d;
+  border-radius: 11px;
+  background: #fffbeb;
+  color: #78350f;
+}
+
+.warnings h3 {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+}
+
+.warnings ul {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.acknowledge {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.acknowledge input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin: 1px 0 0;
+  accent-color: #b45309;
+  cursor: pointer;
 }
 
 .options {

@@ -12,6 +12,7 @@ Todo el proceso ocurre **dentro del navegador**: no hay servidor, no se requiere
 - Ajustes de color y nivel de corrección de errores.
 - Interfaz en español, responsiva y sin emojis.
 - Bloqueo de protocolos peligrosos (`javascript:`, `data:`, `vbscript:`, `file:`).
+- Advertencias y confirmación explícita para enlaces sospechosos (http, IP, punycode, acortadores, credenciales en la URL o longitud inusual).
 
 ## Tecnología
 
@@ -52,8 +53,10 @@ npm run preview
 │   ├── main.jsx        # Montaje de React
 │   ├── App.jsx         # UI, validación de entrada y generación del QR
 │   └── index.css       # Estilos, tooltips y diseño responsivo
-├── vite.config.js      # Configuración mínima de Vite + plugin de React
-└── package.json
+├── vite.config.js      # Base relativa + plugin de React
+├── package.json
+├── LICENSE             # MIT
+└── .github/workflows/deploy.yml
 ```
 
 ## Despliegue en GitHub Pages
@@ -67,7 +70,13 @@ La configuración usa `base: './'` en `vite.config.js`, por lo que funciona en c
 
 > El workflow usa Node 22 (Vite 8 requiere `^20.19.0 || >=22.12.0`). Si tu rama no es `main`, cambia `branches: [main]` en el workflow.
 
-## Notas de seguridad
+## Seguridad
 
-- `analyzeInput()` en `src/App.jsx` es el único punto de validación: rechaza protocolos peligrosos incluso si se intentan ofuscar con espacios, y antepone el protocolo adecuado a dominios y a direcciones `host:puerto`.
+- `analyzeInput()` en `src/App.jsx` rechaza `javascript:`, `data:`, `vbscript:` y `file:` (incluso ofuscados con espacios) y antepone el protocolo adecuado a dominios y a direcciones `host:puerto`.
+- `detectWarnings()` añade avisos no bloqueantes para enlaces sospechosos. Si hay avisos, el botón Generar queda deshabilitado hasta que el usuario marque explícitamente que revisó el enlace.
+- **Límite importante**: la app no puede garantizar que un enlace sea seguro. Un QR es un contenedor neutro; `https://sitio-falso.com` sigue siendo un enlace válido. No hay lista de bloqueo de dominios ni inspección del contenido de la página de destino, porque eso requeriría un servidor y enviar los datos del usuario (lo cual se evita deliberadamente). La responsabilidad final es de quien introduce y comparte el enlace.
 - No existen scripts de test, lint ni typecheck. La verificación principal es `npm run build`.
+
+## Licencia y descargo de responsabilidad
+
+MIT (ver `LICENSE`). El software se entrega **«AS IS»**, sin garantía de ningún tipo. El autor no controla, revisa ni apoya el contenido que cada persona codifica en sus QRs, y no responde por daños, pérdidas o usos indebidos derivados de ellos, ni por los sitios de destino. Quien genera y comparte un QR es responsable de verificar su contenido. Todas las dependencias (`react`, `react-dom`, `qrcode`, `vite`, `@vitejs/plugin-react`) también son MIT.

@@ -50,6 +50,51 @@ function analyzeInput(raw) {
   return { kind: 'text', value };
 }
 
+// Acortadores conocidos: ocultan el destino real del enlace.
+const SHORTENERS = new Set([
+  'bit.ly', 'tinyurl.com', 'goo.gl', 't.co', 'is.gd', 'ow.ly', 'buff.ly',
+  'rebrand.ly', 'cutt.ly', 'tiny.cc', 'j.mp', 's.id', 'shorturl.at', 'qr.ae',
+]);
+
+/**
+ * Señales de alerta en URLs. No bloquean por sí solas: informan al usuario
+ * para que decida con conocimiento antes de generar el QR.
+ */
+function detectWarnings(result) {
+  if (result.kind !== 'url') return [];
+
+  let url;
+  try {
+    url = new URL(result.value);
+  } catch {
+    return [];
+  }
+
+  const warnings = [];
+  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+
+  if (url.protocol === 'http:') {
+    warnings.push('El enlace usa http://, sin cifrar. Un atacante podría modificarlo en la red.');
+  }
+  if (/^xn--/.test(host) || host.includes('.xn--')) {
+    warnings.push('El dominio usa punycode (caracteres internacionales); puede suplantar visualmente a otro sitio.');
+  }
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
+    warnings.push('El enlace apunta a una dirección IP en lugar de un dominio reconocible.');
+  }
+  if (SHORTENERS.has(host.replace(/^www\./, ''))) {
+    warnings.push('Es un acortador: el destino real no se ve hasta abrir el enlace.');
+  }
+  if (url.username || url.password) {
+    warnings.push('La dirección incluye usuario o contraseña; no compartas credenciales en un QR.');
+  }
+  if (result.value.length > 250) {
+    warnings.push('El enlace es inusualmente largo; revisa que no oculte parámetros extra.');
+  }
+
+  return warnings;
+}
+
 const SIZES = [
   { label: 'Compacto · 256 px', value: 256 },
   { label: 'Estándar · 512 px', value: 512 },
@@ -93,8 +138,11 @@ export default function App() {
   const [qr, setQr] = useState(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(false);
 
   const preview = useMemo(() => analyzeInput(input), [input]);
+  const warnings = useMemo(() => detectWarnings(preview), [preview]);
+  const needsConfirmation = warnings.length > 0;
 
   const inputTooltip =
     preview.kind === 'danger'
@@ -119,6 +167,11 @@ export default function App() {
       setError(
         `El protocolo "${result.scheme}:" no está permitido por seguridad. Usa una URL http:// o https://.`
       );
+      return;
+    }
+
+    if (detectWarnings(result).length > 0 && !acknowledged) {
+      setError('Revisa las advertencias y confirma que deseas generar el QR.');
       return;
     }
 
@@ -185,6 +238,11 @@ export default function App() {
               pantalla. Todo ocurre dentro de tu navegador: no se guarda ni se envía nada a ningún
               servidor, y no necesitas iniciar sesión.
             </p>
+            <p className="note__disclaimer">
+              Es una herramienta neutral: no revisamos ni aprobamos lo que introduces. Verifica siempre
+              el contenido antes de compartirlo. El autor no se responsabiliza por el uso que se dé a
+              los códigos generados (licencia MIT, «AS IS»).
+            </p>
           </section>
 
           <ul className="features">
@@ -227,7 +285,10 @@ export default function App() {
                 spellCheck="false"
                 placeholder="https://ejemplo.com  o  escribe cualquier texto"
                 value={input}
-                onChange={(event) => setInput(event.target.value)}
+                onChange={(event) => {
+                  setInput(event.target.value);
+                  setAcknowledged(false);
+                }}
               />
               {preview.kind !== 'empty' && (
                 <span className={`badge badge--${preview.kind}`}>
@@ -246,6 +307,23 @@ export default function App() {
 
             {error && (
               <p className="error" role="alert">{error}</p>
+            )}
+
+            {needsConfirmation && (
+              <section className="warnings" role="alert">
+                <h3>Revisa este enlace antes de continuar</h3>
+                <ul>
+                  {warnings.map((warning) => <li key={warning}>{warning}</li>)}
+                </ul>
+                <label className="acknowledge">
+                  <input
+                    type="checkbox"
+                    checked={acknowledged}
+                    onChange={(event) => setAcknowledged(event.target.checked)}
+                  />
+                  <span>He revisado el enlace y deseo generar el QR de todos modos.</span>
+                </label>
+              </section>
             )}
 
             <details className="options">
@@ -314,7 +392,7 @@ export default function App() {
               <button
                 className="btn btn--primary"
                 type="submit"
-                disabled={busy}
+                disabled={busy || (needsConfirmation && !acknowledged)}
                 data-tooltip="Genera el código QR con el contenido y los ajustes actuales."
               >
                 {busy ? 'Generando…' : 'Generar código QR'}
